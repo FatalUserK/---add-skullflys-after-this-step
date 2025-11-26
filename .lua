@@ -1,3 +1,5 @@
+dofile_once("mods/-- add skullflys after this step/-- add skullflys after this step.lua")
+local add_skullflys_at_every_step = ModSettingGet("skullflys.add_at_every_step") or true
 -- default biome functions that get called if we can't find a a specific biome that works for us
 
 function check_newgame_plus_level( level )
@@ -26,12 +28,14 @@ function init_total_prob( value, x )
 end
 
 function random_from_table( what, x, y )
+        if what.skullflys or add_skullflys_at_every_step then AddSkullflys(x, y) end
         if ( what.total_prob == 0 ) then
                 init_total_prob( what, x )
         end
 
         local r = ProceduralRandom(x,y) * what.total_prob
         for i,v in ipairs(what) do
+        if v.skullflys or add_skullflys_at_every_step then AddSkullflys(x, y) end
                 if( v.prob ~= nil and ( v.spawn_check == nil or v.spawn_check() ) and ( v.ngpluslevel == nil or check_newgame_plus_level( v.ngpluslevel ) ) and ( v.parallel == nil or check_parallel( v.parallel, x ) ) ) then
                         if( r <= v.prob ) then
                                 return v
@@ -147,6 +151,7 @@ end
 -- actual functions that get called from the wang generator
 
 function spawn(what, x, y, rand_x, rand_y)
+        if what.skullflys or add_skullflys_at_every_step then AddSkullflys(x, y) end
         local x_offset,y_offset = 5,5
         -- if( what == nil ) then print( "ERROR - director_helpers - spawn() ... what = nil") end
         local v = random_from_table( what, x, y )
@@ -158,6 +163,7 @@ end
 -- use this function to spawn without applying the hacky 5,5 offset
 
 function spawn2(what, x, y, rand_x, rand_y)
+        if what.skullflys or add_skullflys_at_every_step then AddSkullflys(x, y) end
         -- if( what == nil ) then print( "ERROR - director_helpers - spawn() ... what = nil") end
         local v = random_from_table( what, x, y )
         if ( v ~= nil ) then
@@ -167,6 +173,7 @@ end
 
 function DEBUG_spawn_all( what, x, y, width )
         for i,v in ipairs(what) do
+        if v.skullflys or add_skullflys_at_every_step then AddSkullflys(x, y) end
                 if( v.prob ~= nil and v.prob > 0 ) then
                         entity_load_camera_bound( v, x, y, 0, 0)
                         x = x + width
@@ -192,6 +199,7 @@ function load_random_pixel_scene( what, x, y )
         local r = ProceduralRandom(x,y) * what.total_prob
         local last_element = nil
         for i,v in ipairs(what) do
+        if v.skullflys or add_skullflys_at_every_step then AddSkullflys(x, y) end
                 if( v.prob ~= nil ) then
                         if( v.prob ~= 0 and r <= v.prob ) then
                                 if( is_empty( v.material_file ) and is_empty( v.visual_file ) and is_empty( v.background_file ) ) then
@@ -254,6 +262,7 @@ function load_random_background_sprite( what, x, y )
 
         local r = ProceduralRandom(x,y) * what.total_prob
         for i,v in ipairs(what) do
+        if v.skullflys or add_skullflys_at_every_step then AddSkullflys(x, y) end
                 if( v.prob ~= nil ) then
                         if( v.prob ~= 0 and r <= v.prob ) then
                                 if( is_empty( v.sprite_file) ) then
@@ -338,4 +347,4 @@ function spawn_with_limited_random(what, x, y, rand_x, rand_y, entities_to_rando
 
                 entity_load_camera_bound( v, x + x_offset, y + y_offset, random_x, random_y )
         end
-end
+    end
