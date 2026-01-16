@@ -1,4 +1,4 @@
-dofile_once("mods/-- add skullflys after this step/-- add skullflys after this step.lua")
+dofile_once("mods/-- add skullflys after this step/-- add files after this step/-- add skullflys after this step.lua")
 local add_skullflys_at_every_step = ModSettingGet("skullflys.add_at_every_step") or true
 -- default biome functions that get called if we can't find a a specific biome that works for us
 
