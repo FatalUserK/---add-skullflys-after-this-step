@@ -13,6 +13,14 @@ ModTextFileSetContent("data/translations/common.csv",
 
 ModLuaFileAppend("data/scripts/perks/perk_list.lua", "mods/-- add skullflys after this step/-- add files after this step/-- add perks after this step.lua")
 
+function OnPlayerSpawned(player)
+	if ModSettingGet("skullflys.start_with_radar") then
+		dofile_once("data/scripts/perks/perk.lua")
+		perk_pickup( nil, player, "SCAN_SKULLFLYS_AFTER_THIS_STEP", true, false, true )
+	end
+end
+
+
 
 local entity = tostring(ModSettingGet("skullflys.entity"))
 if not ModDoesFileExist(entity) then
