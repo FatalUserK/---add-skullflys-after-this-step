@@ -47,13 +47,20 @@ local current_language = languages[GameTextGetTranslatedOrNot("$current_language
 --Translation Keys can be seen in the `languages` table above
 local translation_strings = {
 	add_at_every_step = {
-		en = "-- add skullflys after every step"
+		en = "-- add skullflys after every step",
 	},
 	entity = {
-		en = "-- add custom entity after this step"
+		en = "-- add custom entity after this step",
+		en_desc = "sorry, the text box is kinda shoddily made, might fix at some point idk",
+		invalid_entity_menu = {
+			en_desc = "INVALID ENTITY\nIn the main menu we can only check against vanilla data, modded entities cannot be detected unless you are in a run.",
+		},
+		invalid_entity_game = {
+			en_desc = "INVALID ENTITY",
+		},
 	},
 	start_with_radar = {
-		en = "-- start with skullfly radar after this step"
+		en = "-- start with skullfly radar after this step",
 	},
 }
 
@@ -61,10 +68,125 @@ local translation_strings = {
 -- just please provide the colour value you would like your name to be as well as the translation for "[your translation] by [you]"
 local translation_credit_data = {}
 
-
 local offset_amount = 15
 local keyboard_state = 0
 local focused_element = ""
+local TimeLocal = {}
+
+local function update_time()
+	TimeLocal.year,TimeLocal.month,TimeLocal.day,TimeLocal.hour,TimeLocal.minute,TimeLocal.second,TimeLocal.jussi,TimeLocal.mammi = GameGetDateAndTimeLocal()
+end
+update_time()
+
+--#region TEXT INPUT NONSENSE:
+local keycodes = {
+	backspace = 42,
+	mouse_left = 1,
+	enter = 88,
+	return_key = 40,
+	left = 80,
+	right = 79,
+	delete = 76,
+	shift_l = 225,
+	shift_r = 229,
+	ctrl_l = 224,
+	ctrl_r = 228,
+	a = 4,
+	v = 25,
+	x = 27,
+}
+
+local keycodes_lookup = {
+	[4] = "a",
+	[5] = "b",
+	[6] = "c",
+	[7] = "d",
+	[8] = "e",
+	[9] = "f",
+	[10] = "g",
+	[11] = "h",
+	[12] = "i",
+	[13] = "j",
+	[14] = "k",
+	[15] = "l",
+	[16] = "m",
+	[17] = "n",
+	[18] = "o",
+	[19] = "p",
+	[20] = "q",
+	[21] = "r",
+	[22] = "s",
+	[23] = "t",
+	[24] = "u",
+	[25] = "v",
+	[26] = "w",
+	[27] = "x",
+	[28] = "y",
+	[29] = "z",
+	[30] = "1",
+	[31] = "2",
+	[32] = "3",
+	[33] = "4",
+	[34] = "5",
+	[35] = "6",
+	[36] = "7",
+	[37] = "8",
+	[38] = "9",
+	[39] = "0",
+	[42] = "", --backspace
+	[44] = " ",
+	[45] = "-",
+	[46] = "=",
+	[54] = ",",
+	[55] = ".",
+	[56] = "/",
+}
+
+local uppercase_lookup = {
+	["a"] = "A",
+	["b"] = "B",
+	["c"] = "C",
+	["d"] = "D",
+	["e"] = "E",
+	["f"] = "F",
+	["g"] = "G",
+	["h"] = "H",
+	["i"] = "I",
+	["j"] = "J",
+	["k"] = "K",
+	["l"] = "L",
+	["m"] = "M",
+	["n"] = "N",
+	["o"] = "O",
+	["p"] = "P",
+	["q"] = "Q",
+	["r"] = "R",
+	["s"] = "S",
+	["t"] = "T",
+	["u"] = "U",
+	["v"] = "V",
+	["w"] = "W",
+	["x"] = "X",
+	["y"] = "Y",
+	["z"] = "Z",
+	["1"] = "!",
+	["2"] = "\"",
+	["3"] = "£",
+	["4"] = "$",
+	["5"] = "%",
+	["6"] = "^",
+	["7"] = "&",
+	["8"] = "*",
+	["9"] = "(",
+	["0"] = ")",
+	["/"] = "?",
+	[","] = "<",
+	["."] = ">",
+	["-"] = "_",
+	["="] = "+",
+}
+--#endregion
+
 --translations are separated for translators' convenience
 local settings = {
 	{
@@ -74,7 +196,18 @@ local settings = {
 	},
 	{
 		id = "entity",
-		type = "text_input"
+		type = "text_input",
+		value_default = "data/entities/animals/crypt/skullfly.xml",
+		auto_ajust_size = true,
+		validator = function(self) return ModDoesFileExist(self.current_text) end,
+		invalid_msg = {
+			id = mods_are_loaded and "invalid_entity_game" or "invalid_entity_menu"
+		},
+		c = {
+			r = .75,
+			g = .75,
+			b = .75,
+		},
 	}, --need to make text thingy
 	{
 		id = "start_with_radar",
@@ -99,6 +232,7 @@ local screen_w,screen_h
 local tlcr_data_ordered = {}
 function ModSettingsUpdate(init_scope, is_init)
 	current_language = languages[GameTextGetTranslatedOrNot("$current_language")]
+	update_time()
 
 	local dummy_gui = not is_init and GuiCreate()
 	local description_start_pos
@@ -141,15 +275,15 @@ function ModSettingsUpdate(init_scope, is_init)
 		path = path or ""
 		input_settings = input_settings or settings
 		input_translations = input_translations or translation_strings
-		for key, setting in pairs(input_settings) do
+		for _, setting in pairs(input_settings) do
 			setting.path = mod_id .. "." .. path .. setting.id
 			setting.type = setting.type or type(setting.value_default)
 			setting.text_offset_x = setting.text_offset_x or 0
 
-			if setting.items then
-				update_translations_and_path(setting.items, input_translations[setting.id], path .. (not setting.not_path and (setting.id .. ".") or ""), recursion + 1)
-			elseif setting.dependents then
-				update_translations_and_path(setting.dependents, input_translations[setting.id], path .. (not setting.not_path and (setting.id .. ".") or ""), recursion + 1)
+			for k, v in pairs(setting) do
+				if type(v) == "table" and v[1] and v[1].id then
+					update_translations_and_path(v, input_translations[setting.id], path .. (not setting.not_path and (setting.id .. ".") or ""), recursion + 1)
+				end
 			end
 
 
@@ -209,7 +343,7 @@ function ModSettingsUpdate(init_scope, is_init)
 			::continue::
 		end
 	end
-	update_translations_and_path()
+	update_translations_and_path(settings)
 
 	local function set_defaults(setting)
 		if setting.type == "group" then
@@ -384,16 +518,102 @@ local function BoolSetting(gui, x_offset, setting, c)
 	end
 end
 
-local function TextBox(gui, x_offset, setting, c)
-	print("a")
-	local box_w = setting.text_box_width or 30
-	local box_h = setting.text_box_height or 14
+local cursor_pos = 0
+local function TextBox(gui, setting, x_offset, y_offset, c)
+	local box_w = setting.text_box_width
+	local box_h = setting.text_box_height
+	local currently_selected = focused_element == setting.path
+	local box_sprite = currently_selected and setting.text_box_selected_sprite or setting.text_box_unselected_sprite
+	local text = setting.current_text
+	local text_w,text_h = GuiGetTextDimensions(gui, text)
+	box_w = math.max(text_w + 8, box_w)
+	local text_c = setting.text_c or {r=1,g=1,b=1}
+	if not currently_selected then
+		text_c = setting.text_unselected_c or {
+			r = math.min((text_c.r + .2)*.5, 1),
+			g = math.min((text_c.g + .2)*.5, 1),
+			b = math.min((text_c.b + .2)*.5, 1),
+		}
+	end
 
 	GuiText(gui, x_offset, 0, "")
 	local _, _, _, x, y = GuiGetPreviousWidgetInfo(gui)
-	GuiImageNinePiece(gui, create_id(), x + x_offset, y, box_w, box_h, 1, "data/ui_gfx/empty_black.png")
+	local box_x = x + x_offset
+	local box_y = y + y_offset
+	GuiImageNinePiece(gui, create_id(), box_x, box_y, box_w-4, box_h-4, 1, box_sprite)
 	local guiPrev = {GuiGetPreviousWidgetInfo(gui)}
 
+	local hovered,clicked,rclicked
+	if guiPrev[3] and mouse_is_valid then
+		hovered = true
+		clicked = InputIsMouseButtonJustDown(1)
+		rclicked = InputIsMouseButtonJustDown(2)
+		GuiImageNinePiece(gui, create_id(), box_x-1, box_y-1, box_w-2, box_h-2, 1, "data/ui_gfx/1px_white.png")
+	end
+
+	if clicked then
+		focused_element = setting.path
+		GamePlaySound("ui", "ui/button_select", 0, 0)
+	end
+
+	if rclicked then
+		setting.current_text = setting.value_default
+		text = setting.current_text
+		GamePlaySound("ui", "ui/button_select", 0, 0)
+	end
+
+	GuiOptionsAddForNextWidget(gui, GUI_OPTION.Layout_NextSameLine)
+	GuiColorSetForNextWidget(gui, text_c.r, text_c.g, text_c.b, 1)
+	GuiText(gui, x_offset+1, y_offset, text)
+
+	if setting.validator and not setting:validator() then
+		local err_x = x_offset + box_w + 1
+		GuiOptionsAddForNextWidget(gui, GUI_OPTION.Layout_NextSameLine)
+		GuiImage(gui, create_id(), err_x, 1, "data/ui_gfx/mods_newer.png", 1, 1)
+		local _,_,err_hovered = GuiGetPreviousWidgetInfo(gui)
+		if err_hovered and setting.invalid_msg then
+			local msg = mods_are_loaded and "invalid_entity_game" or "invalid_entity_menu"
+			--DrawTooltip(gui, setting.invalid_msg)
+		end
+	end
+
+	if currently_selected then
+		if TimeLocal.second % 2 == 0 then
+			GuiZSetForNextWidget(gui, -40)
+			GuiColorSetForNextWidget(gui, 2, 2,2,4)
+			GuiImageNinePiece(gui, create_id(), box_x + 2 + text_w, box_y + 2, 1, box_h-8, 1, "data/ui_gfx/1px_white.png")
+		end
+
+		local str = ""
+		local key_pressed
+		for id, symbol in pairs(keycodes_lookup) do
+			if InputIsKeyJustDown(id) then
+				str = str .. symbol
+				key_pressed = true
+			end
+		end
+		if key_pressed then
+			if keyboard_state == 1 then
+				str = str:upper()
+				local new_str = ""
+				for char in str:gmatch(".") do
+					new_str = new_str .. (uppercase_lookup[char] or char)
+				end
+				str = new_str
+			end
+
+			text = text .. str
+
+			if InputIsKeyJustDown(42) then
+				text = text:sub(1, -2)
+			end
+
+			setting.current_text = text
+			ModSettingSet(setting.path, text)
+		end
+	end
+
+	GuiText(gui, 0, 0, " ", box_h/12)
 end
 
 local function draw_translation_credits(gui, x, y)
@@ -427,19 +647,22 @@ function ModSettingsGui(gui, in_main_menu)
 	--GuiImageNinePiece(gui, create_id(), x_orig, y_orig, 1, 1, 1, "data/temp/edge_c2_1.png") --"data/temp/edge_c2_0.png", for debugging
 	GuiLayoutEndLayer(gui)
 
+	update_time()
+
+	keyboard_state = 0
+	if InputIsKeyDown(225) or InputIsKeyDown(229) then
+		keyboard_state = 1
+	end
+	if InputIsKeyDown(224) or InputIsKeyDown(228) then
+		keyboard_state = keyboard_state + 2
+	end
+
 	if InputIsMouseButtonJustDown(1) then
 		focused_element = ""
 	end
 
 
 	local function RenderModSettingsGui(gui, in_main_menu, _settings, offset, parent_is_disabled, recursion)
-		keyboard_state = 0
-		if InputIsKeyDown(225) or InputIsKeyDown(229) then
-			keyboard_state = 1
-		end
-		if InputIsKeyDown(224) or InputIsKeyDown(228) then
-			keyboard_state = keyboard_state + 2
-		end
 		recursion = recursion or 0
 		offset = offset or 0
 		_settings = _settings or settings
@@ -570,7 +793,7 @@ function ModSettingsGui(gui, in_main_menu)
 					GuiColorSetForNextWidget(gui, c.r, c.g, c.b, 1)
 					GuiText(gui, (setting.icon_w or 0) + setting.text_offset_x + offset, 0, setting.name)
 
-					TextBox(gui, offset, setting)
+					TextBox(gui, setting, offset, 1)
 				elseif setting.type == "reset_button" then
 					GuiText(gui, 0, 0, "")
 					local _, _, _, x, y = GuiGetPreviousWidgetInfo(gui)
