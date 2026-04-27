@@ -286,6 +286,13 @@ function ModSettingsUpdate(init_scope, is_init)
 				end
 			end
 
+			if setting.type == "text_input" then
+				setting.text_box_width = setting.text_box_width or 120
+				setting.text_box_height = setting.text_box_height or 14
+				setting.text_box_unselected_sprite = setting.text_box_unselected_sprite or "data/ui_gfx/decorations/9piece0_gray.png"
+				setting.text_box_unselected_sprite = setting.text_box_selected_sprite or "data/ui_gfx/decorations/9piece0.png"
+				setting.current_text = setting.current_text or ""
+			end
 
 			if not dummy_gui then goto continue end
 
@@ -573,7 +580,7 @@ local function TextBox(gui, setting, x_offset, y_offset, c)
 		local _,_,err_hovered = GuiGetPreviousWidgetInfo(gui)
 		if err_hovered and setting.invalid_msg then
 			local msg = mods_are_loaded and "invalid_entity_game" or "invalid_entity_menu"
-			--DrawTooltip(gui, setting.invalid_msg)
+			--DrawTooltip(gui, setting.invalid_msg, x, y)
 		end
 	end
 

@@ -14,5 +14,5 @@ this is a sort of weird singular-plural, feel free to use this in your translati
 
 
 ## LAST THING!!!!!
-This is a very silly mod. Ff there is anyone for some reason committing the time to translate this, go with whatever you feel is right, this file is just here to provide some backstory and context if you so desire.
-You know your language better than I do after all o/
+This is a very silly mod. If there is anyone for some reason committing the time to translate this, go with whatever you feel is right, this file is just here to provide some backstory and context if you so desire.
+You know your language better than I do after all, have fun and do something funnny! o/
