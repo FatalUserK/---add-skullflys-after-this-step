@@ -4,7 +4,7 @@ dofile_once("data/scripts/lib/mod_settings.lua")
 ---mod assets are not loaded on the main menu, which means we can't split our work into more than one file or use custom libs or sprites
 ---just wanted to justify why this file is (as of last updating this comment) 1453 lines
 
-local mod_id = "parallel_parity"
+local mod_id = "skullflys"
 mod_settings_version = 1
 
 local function get_setting_id(name)
